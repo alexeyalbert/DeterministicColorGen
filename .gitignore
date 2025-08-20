@@ -1,0 +1,31 @@
+.DS_Store
+/.build
+/Packages
+xcuserdata/
+DerivedData/
+.swiftpm/configuration/registries.json
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.netrc
+
+# Xcode project settings (Exclude user-specific data)
+*.xcworkspace/xcuserdata/
+*.xcuserstate
+
+# Build Artifacts
+DerivedData/
+build/
+*.ipa
+*.app
+*.dSYM
+
+# Swift Package Manager
+.swiftpm
+Package.resolved
+.build/
+
+# Logs
+*.log
+
+# Other IDE or temporary files
+*.swp
+*.lock
