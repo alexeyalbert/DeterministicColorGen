@@ -148,16 +148,17 @@ LinearGradient(
 The package uses an algorithm to ensure high-quality, accessible colors:
 
 1. **Hash Input**: Uses SHA-256 to create a deterministic hash from the input string
-2. **OKLCH Conversion**: Converts to OKLCH color space for perceptual uniformity
-3. **Gamut Mapping**: Ensures colors are within sRGB displayable range
-4. **Contrast Optimization**: Adjusts luminance to meet WCAG 4.5:1 requirements
-5. **Mode Adaptation**: Slightly adjusts colors for light/dark mode compatibility
+2. **Curated OKLCH Palette**: Remaps rusty, muddy, and olive source-hue intervals into clean red-orange, gold, and emerald bands with hue-specific lightness ranges
+3. **Relative Chroma**: Samples chroma as a percentage of the exact sRGB gamut limit for each hue/lightness pair
+4. **Gamut Mapping**: Ensures colors are within the sRGB displayable range without collapsing multiple inputs onto the same boundary color
+5. **Contrast Optimization**: Selects text colors that meet the WCAG 4.5:1 requirement
+6. **Mode Adaptation**: Uses a deeper hue-aware dark-mode envelope while preserving vivid relative chroma
 
 ### Color Properties
 
 - **Hue**: Distributed across the full 360° spectrum
-- **Chroma**: Vivid but not neon (0.16-0.30 range)
-- **Lightness**: Optimized for readability (0.50-0.68 base range)
+- **Chroma**: 96-99% of the maximum displayable sRGB chroma at the generated hue and lightness
+- **Lightness**: Smoothly varies by curated hue family (approximately 0.53-0.83), with narrow ranges that avoid brown, olive, and pastel outcomes
 - **Contrast**: Minimum 4.5:1 ratio against white/black text
 
 ## Contributing

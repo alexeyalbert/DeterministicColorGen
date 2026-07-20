@@ -168,6 +168,82 @@ struct ColorGenerationTests {
 			#expect(color.0 >= 0.0 && color.0 <= 1.0)
 		}
 	}
+
+	@Test("Warm and green hues use brighter hue-aware lightness ranges")
+	func testHueAwareLightnessRanges() {
+		let orange = DeterministicColor.lightnessRange(forHue: 36)
+		let yellow = DeterministicColor.lightnessRange(forHue: 95)
+		let green = DeterministicColor.lightnessRange(forHue: 140)
+		let blue = DeterministicColor.lightnessRange(forHue: 260)
+
+		#expect(orange.lowerBound >= 0.56)
+		#expect(yellow.lowerBound >= 0.79)
+		#expect(green.lowerBound >= 0.57)
+		#expect(blue.lowerBound <= 0.53)
+		#expect(yellow.lowerBound > orange.lowerBound)
+	}
+
+	@Test("Dark mode uses deeper hue-aware ranges without muddying warm hues")
+	func testDarkModeLightnessRanges() {
+		let red = DeterministicColor.darkLightnessRange(forHue: 0)
+		let yellow = DeterministicColor.darkLightnessRange(forHue: 95)
+		let green = DeterministicColor.darkLightnessRange(forHue: 140)
+		let blue = DeterministicColor.darkLightnessRange(forHue: 260)
+
+		#expect(red.upperBound <= 0.60)
+		#expect(blue.upperBound <= 0.61)
+		#expect(yellow.lowerBound >= 0.64)
+		#expect(green.lowerBound >= 0.51)
+		#expect(yellow.lowerBound > red.lowerBound)
+		#expect(yellow.lowerBound > green.lowerBound)
+
+		for hue in stride(from: 0.0, through: 359.0, by: 1.0) {
+			let light = DeterministicColor.lightnessRange(forHue: hue)
+			let dark = DeterministicColor.darkLightnessRange(forHue: hue)
+
+			#expect(dark.lowerBound < light.lowerBound)
+			#expect(dark.upperBound < light.upperBound)
+		}
+	}
+
+	@Test("Muddy warm hue arc is remapped into curated palette bands")
+	func testMuddyWarmHuesAreRemapped() {
+		let redOrange = DeterministicColor.paletteHue(for: 55)
+		let gold = DeterministicColor.paletteHue(for: 85)
+		let green = DeterministicColor.paletteHue(for: 110)
+
+		#expect(redOrange >= 34 && redOrange <= 39)
+		#expect(gold >= 88 && gold <= 100)
+		#expect(green >= 135 && green <= 155)
+		#expect(DeterministicColor.paletteHue(for: 30) == 30)
+		#expect(DeterministicColor.paletteHue(for: 140) == 140)
+
+		for sourceHue in stride(from: 0.0, through: 359.75, by: 0.25) {
+			let generatedHue = DeterministicColor.paletteHue(for: sourceHue)
+			#expect(!(40..<88).contains(generatedHue))
+			#expect(!(100..<135).contains(generatedHue))
+		}
+	}
+
+	@Test("White text is preferred across its full WCAG-safe crossover range")
+	func testWhiteTextCrossoverBias() {
+		#expect(DeterministicColor.shouldUseWhiteText(relativeLuminance: 0.183) == true)
+		#expect(DeterministicColor.shouldUseWhiteText(relativeLuminance: 0.184) == false)
+	}
+
+	@Test("Generated parameters stay inside their hue-aware envelope")
+	func testGeneratedParametersUseHueAwareEnvelope() {
+		for index in 0..<1_000 {
+			let parameters = DeterministicColor.generationParameters(for: "palette-\(index)")
+			let range = DeterministicColor.lightnessRange(forHue: parameters.hue)
+
+			#expect(range.contains(parameters.lightness))
+			#expect(parameters.chromaFraction >= 0.96)
+			#expect(parameters.chromaFraction <= 0.99)
+			#expect(parameters.chromaPosition >= 0 && parameters.chromaPosition <= 1)
+			#expect(parameters.lightnessPosition >= 0 && parameters.lightnessPosition <= 1)
+		}
+	}
 }
 
 // helpers
@@ -192,5 +268,3 @@ private func contrastRatio(_ a: (Double, Double, Double), _ b: (Double, Double, 
 	let (hi, lo) = L1 >= L2 ? (L1, L2) : (L2, L1)
 	return (hi + 0.05) / (lo + 0.05)
 }
-
-
